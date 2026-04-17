@@ -1,0 +1,27 @@
+# Local tooling
+.codex
+
+# Python / notebooks
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Large local datasets
+data/memory/*.vmem
+data/memory/*.vmsn
+data/memory/*.raw
+data/memory/*.dump
+
+# Archived nested git metadata
+archive/git-metadata/
