@@ -58,6 +58,11 @@ jupyter lab
 
 그 다음 [notebooks/pilot_test_notebook.ipynb](/home/taejin/Jupyter/jupyter-ramdump-analyzer/notebooks/pilot_test_notebook.ipynb)를 실행합니다.
 
+## Sample data source
+
+- 공개된 Linux 메모리 덤프 샘플은 13Cubed의 Ubuntu 22.04 메모리 포렌식 챌린지 자료를 사용했습니다.
+- 다운로드: https://cdn.13cubed.com/downloads/linux_challenge.zip
+
 ## What the pipeline does
 
 1. dump 파일 메타데이터와 헤더를 확인합니다.

@@ -29,3 +29,8 @@ Jupyter/
 - 프로젝트 문서: [jupyter-ramdump-analyzer/README.md](/home/taejin/Jupyter/jupyter-ramdump-analyzer/README.md)
 - 연구 문서: [docs/research](/home/taejin/Jupyter/docs/research)
 - 데이터 안내: [data/README.md](/home/taejin/Jupyter/data/README.md)
+
+## Sample Data Source
+
+- 공개된 Linux 메모리 덤프 샘플은 13Cubed의 Ubuntu 22.04 메모리 포렌식 챌린지 자료를 사용했습니다.
+- 다운로드: https://cdn.13cubed.com/downloads/linux_challenge.zip
