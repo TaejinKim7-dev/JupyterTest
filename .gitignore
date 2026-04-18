@@ -19,7 +19,7 @@ Thumbs.db
 
 # Large local datasets
 data/memory/*.vmem
-data/memory/*.vmsn
+data/memory/*.xz
 data/memory/*.raw
 data/memory/*.dump
 
