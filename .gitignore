@@ -1,5 +1,8 @@
 # Local tooling
 .codex
+.jupyter_config/
+.jupyter_data/
+.jupyter_runtime/
 
 # Python / notebooks
 __pycache__/

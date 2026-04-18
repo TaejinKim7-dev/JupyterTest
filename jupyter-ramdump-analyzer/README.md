@@ -76,6 +76,12 @@ jupyter lab
 
 그 다음 [notebooks/pilot_test_notebook.ipynb](/home/taejin/Jupyter/jupyter-ramdump-analyzer/notebooks/pilot_test_notebook.ipynb)를 실행합니다.
 
+환경변수로 dump/vmlinux 경로를 넘겨 notebook에서 바로 사용하려면:
+
+```bash
+DUMP_PATH=/path/to/memory.vmem VMLINUX_PATH=/path/to/vmlinux jupyter lab
+```
+
 ## Sample data source
 
 - 공개된 Linux 메모리 덤프 샘플은 13Cubed의 Ubuntu 22.04 메모리 포렌식 챌린지 자료를 사용했습니다.
@@ -93,10 +99,12 @@ jupyter lab
 
 - model: `openai/gpt-oss-120b:free`
 - base URL: `https://openrouter.ai/api/v1`
+- fallback model: `openrouter/free`
 
 주의:
 
 - free 모델은 지연이 있을 수 있으므로 기본 흐름은 `LLM 분석 1회`로 두고, 추가 계획 생성은 선택적으로 켜는 것이 좋습니다.
+- 기본 free 모델 upstream 이 비어 있으면 `openrouter/free` 로 한 번 더 재시도합니다.
 
 ## Known limitations
 

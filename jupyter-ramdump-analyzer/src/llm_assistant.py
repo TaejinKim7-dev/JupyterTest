@@ -12,6 +12,7 @@ class LLMAssistant:
 
     DEFAULT_MODEL = "openai/gpt-oss-120b:free"
     DEFAULT_API_BASE = "https://openrouter.ai/api/v1"
+    DEFAULT_FALLBACK_MODELS = ["openrouter/free"]
 
     def __init__(
         self,
@@ -24,6 +25,7 @@ class LLMAssistant:
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
         self.api_base = (api_base or os.environ.get("OPENAI_API_BASE") or self.DEFAULT_API_BASE).rstrip("/")
         self.model = model
+        self.fallback_models = self._build_fallback_models()
         self.timeout = timeout
         self.system_prompt = system_prompt or self._default_system_prompt()
         self.history: List[Dict[str, str]] = []
@@ -93,6 +95,19 @@ class LLMAssistant:
     def _format_error(self, result: Dict[str, object]) -> str:
         return f"[API 호출 실패] {result.get('error', 'unknown error')}"
 
+    def _build_fallback_models(self) -> List[str]:
+        models = []
+        env_fallback = os.environ.get("OPENAI_FALLBACK_MODEL", "").strip()
+        if env_fallback:
+            models.append(env_fallback)
+        models.extend(self.DEFAULT_FALLBACK_MODELS)
+
+        deduped = []
+        for candidate in models:
+            if candidate and candidate != self.model and candidate not in deduped:
+                deduped.append(candidate)
+        return deduped
+
     def _request_chat(self, messages: List[Dict[str, str]]) -> Dict[str, object]:
         if not self.api_key:
             return {
@@ -113,6 +128,30 @@ class LLMAssistant:
             "temperature": 0.3,
         }
 
+        return self._request_with_model_sequence(payload, headers)
+
+    def _request_with_model_sequence(self, payload: Dict[str, object], headers: Dict[str, str]) -> Dict[str, object]:
+        models_to_try = [self.model, *self.fallback_models]
+        errors = []
+
+        for model_name in models_to_try:
+            attempt_payload = dict(payload)
+            attempt_payload["model"] = model_name
+            result = self._request_single_model(attempt_payload, headers)
+            if result["ok"]:
+                if model_name != self.model:
+                    result["content"] = f"[fallback model: {model_name}]\n{result['content']}"
+                return result
+            errors.append(f"{model_name}: {result['error']}")
+
+        return {
+            "ok": False,
+            "error": " | ".join(errors),
+            "status_code": None,
+            "content": "",
+        }
+
+    def _request_single_model(self, payload: Dict[str, object], headers: Dict[str, str]) -> Dict[str, object]:
         try:
             response = requests.post(
                 f"{self.api_base}/chat/completions",
