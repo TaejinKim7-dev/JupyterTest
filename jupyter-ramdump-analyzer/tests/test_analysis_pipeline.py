@@ -2,6 +2,7 @@ import os
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,13 +12,13 @@ if str(SRC) not in sys.path:
 
 from analysis_pipeline import FeasibilityOptions, format_feasibility_summary, run_feasibility_analysis
 from llm_assistant import LLMAssistant
+import memory_analyzer
+import memory_kernel_analyzer
 from memory_kernel_analyzer import build_analysis_context, summarize_findings
-from ramdump_loader import resolve_default_dump_path
-
-
+import run_llm_feasibility
 class AnalysisPipelineTests(unittest.TestCase):
     def setUp(self):
-        self.dump_path = resolve_default_dump_path()
+        self.dump_path = str((ROOT.parent / "data" / "memory" / "memory.vmem").resolve())
         self.assertTrue(os.path.exists(self.dump_path), f"missing dump file: {self.dump_path}")
 
     def test_build_analysis_context_has_expected_shape(self):
@@ -56,10 +57,30 @@ class AnalysisPipelineTests(unittest.TestCase):
         self.assertIn("panic_pattern_count", text)
 
     def test_llm_assistant_reports_missing_api_key(self):
-        assistant = LLMAssistant(api_key="")
-        self.assertFalse(assistant.is_configured())
-        result = assistant.ask("ping")
+        with mock.patch.dict(os.environ, {}, clear=True):
+            assistant = LLMAssistant(api_key="")
+            self.assertFalse(assistant.is_configured())
+            result = assistant.ask("ping")
         self.assertIn("OPENAI_API_KEY", result)
+
+    def test_memory_analyzer_parse_args(self):
+        with mock.patch.object(sys, "argv", ["memory_analyzer.py", "/tmp/dump.bin", "--vmlinux", "/tmp/vmlinux"]):
+            args = memory_analyzer.parse_args()
+        self.assertEqual(args.dump_path, "/tmp/dump.bin")
+        self.assertEqual(args.vmlinux_path, "/tmp/vmlinux")
+
+    def test_memory_kernel_analyzer_parse_args(self):
+        with mock.patch.object(sys, "argv", ["memory_kernel_analyzer.py", "/tmp/dump.bin", "--vmlinux", "/tmp/vmlinux"]):
+            args = memory_kernel_analyzer.parse_args()
+        self.assertEqual(args.dump_path, "/tmp/dump.bin")
+        self.assertEqual(args.vmlinux_path, "/tmp/vmlinux")
+
+    def test_run_llm_feasibility_parse_args(self):
+        with mock.patch.object(sys, "argv", ["run_llm_feasibility.py", "/tmp/dump.bin", "--vmlinux", "/tmp/vmlinux", "--next-steps"]):
+            args = run_llm_feasibility.parse_args()
+        self.assertEqual(args.dump_path, "/tmp/dump.bin")
+        self.assertEqual(args.vmlinux_path, "/tmp/vmlinux")
+        self.assertTrue(args.next_steps)
 
 
 if __name__ == "__main__":

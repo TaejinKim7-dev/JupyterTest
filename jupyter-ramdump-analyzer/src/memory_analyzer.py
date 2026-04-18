@@ -5,11 +5,34 @@ Basic memory dump analyzer for notebook/CLI smoke testing.
 
 from __future__ import annotations
 
-from ramdump_loader import load_ramdump, resolve_default_dump_path
+import argparse
+
+from ramdump_loader import load_ramdump, prompt_for_existing_path
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Basic memory dump analyzer")
+    parser.add_argument(
+        "dump_path",
+        nargs="?",
+        help="Path to the memory dump file",
+    )
+    parser.add_argument(
+        "--vmlinux",
+        dest="vmlinux_path",
+        default=None,
+        help="Optional path to a vmlinux symbol file",
+    )
+    return parser.parse_args()
 
 
 def main():
-    loader = load_ramdump(resolve_default_dump_path())
+    args = parse_args()
+    dump_path = args.dump_path or prompt_for_existing_path("dump_path")
+    vmlinux_path = args.vmlinux_path
+    if vmlinux_path and not vmlinux_path.strip():
+        vmlinux_path = None
+    loader = load_ramdump(dump_path, vmlinux_path=vmlinux_path)
     file_info = loader.get_file_info()
     header_info = loader.get_header_info()
     patterns = loader.find_kernel_patterns()
@@ -23,6 +46,7 @@ def main():
     print(f"size_mb: {file_info['size_mb']}")
     print(f"is_elf: {header_info['is_elf']}")
     print(f"header_hex: {header_info['hex_preview']}")
+    print(f"vmlinux: {vmlinux_path or '(not provided)'}")
 
     print("\n[keywords]")
     for category, values in patterns.items():

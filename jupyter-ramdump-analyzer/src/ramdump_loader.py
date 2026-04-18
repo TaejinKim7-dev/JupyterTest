@@ -10,9 +10,6 @@ import os
 import re
 
 
-WORKSPACE_DIR = Path(__file__).resolve().parents[2]
-DEFAULT_DUMP_PATH = WORKSPACE_DIR / "data" / "memory" / "memory.vmem"
-DEFAULT_VMSN_PATH = WORKSPACE_DIR / "data" / "memory" / "memory.vmsn"
 DEFAULT_SAMPLE_COUNT = 16
 DEFAULT_SCAN_CHUNK_SIZE = 1024 * 1024
 
@@ -277,15 +274,25 @@ class VmlinuxLoader:
             if addr <= address < addr + 0x100:
                 return name
         return None
-
-
-def resolve_default_dump_path() -> str:
-    return str(DEFAULT_DUMP_PATH)
-
-
 def load_ramdump(dump_path: Optional[str] = None, vmlinux_path: Optional[str] = None) -> RamdumpLoader:
-    return RamdumpLoader(dump_path or resolve_default_dump_path(), vmlinux_path)
+    if not dump_path:
+        raise ValueError("dump_path is required")
+    return RamdumpLoader(dump_path, vmlinux_path)
 
 
 def load_vmlinux(vmlinux_path: str) -> VmlinuxLoader:
     return VmlinuxLoader(vmlinux_path)
+
+
+def prompt_for_existing_path(label: str, optional: bool = False) -> Optional[str]:
+    while True:
+        value = input(f"{label}: ").strip()
+        if not value:
+            if optional:
+                return None
+            print(f"[ERROR] {label} is required.")
+            continue
+        path = Path(value).expanduser()
+        if path.exists():
+            return str(path.resolve())
+        print(f"[ERROR] path not found: {path}")

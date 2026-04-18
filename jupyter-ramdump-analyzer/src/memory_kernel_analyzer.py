@@ -5,16 +5,14 @@ Kernel-focused feasibility analysis for a memory dump.
 
 from __future__ import annotations
 
+import argparse
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 import os
 import re
 
-from ramdump_loader import resolve_default_dump_path
-
-
-DEFAULT_DUMP_FILE = resolve_default_dump_path()
+from ramdump_loader import prompt_for_existing_path
 DEFAULT_SAMPLE_COUNT = 12
 DEFAULT_SCAN_CHUNK_SIZE = 2 * 1024 * 1024
 
@@ -222,7 +220,7 @@ def sample_chunks(dump_path: str, sample_count: int = 8, chunk_size: int = 256) 
     return samples
 
 
-def build_analysis_context(dump_path: str = DEFAULT_DUMP_FILE) -> AnalysisContext:
+def build_analysis_context(dump_path: str) -> AnalysisContext:
     if not os.path.exists(dump_path):
         raise FileNotFoundError(f"dump file not found: {dump_path}")
 
@@ -299,8 +297,25 @@ def _print_section(title: str):
     print("=" * 60)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Kernel-focused feasibility analysis for a memory dump")
+    parser.add_argument(
+        "dump_path",
+        nargs="?",
+        help="Path to the memory dump file",
+    )
+    parser.add_argument(
+        "--vmlinux",
+        dest="vmlinux_path",
+        default=None,
+        help="Optional path to a vmlinux symbol file",
+    )
+    return parser.parse_args()
+
+
 def main():
-    dump_path = DEFAULT_DUMP_FILE
+    args = parse_args()
+    dump_path = args.dump_path or prompt_for_existing_path("dump_path")
     if not os.path.exists(dump_path):
         print(f"[ERROR] 덤프 파일을 찾을 수 없습니다: {dump_path}")
         return
@@ -311,6 +326,7 @@ def main():
     _print_section("Memory Dump Deep Analysis")
     print(f"파일: {summary['file_info']['path']}")
     print(f"크기: {summary['file_info']['size_gb']} GB")
+    print(f"vmlinux: {args.vmlinux_path or '(not provided)'}")
 
     _print_section("Kernel Versions")
     versions = summary["kernel_versions"] or ["(없음)"]
