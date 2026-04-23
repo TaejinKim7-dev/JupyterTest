@@ -25,6 +25,18 @@ data/memory/*.vmem
 data/memory/*.xz
 data/memory/*.raw
 data/memory/*.dump
+data/android-emulator/downloads/
+data/android-emulator/sdk/
+data/android-emulator/logs/
+!data/android-emulator/logs/.gitkeep
+data/aosp-lab/source/
+data/aosp-lab/out/
+data/aosp-lab/dist/
+data/aosp-lab/cache/
+data/aosp-lab/downloads/
+data/aosp-lab/logs/*.tmp
+data/aosp-lab/logs/*.pid
+!data/aosp-lab/logs/.gitkeep
 
 # Archived nested git metadata
 archive/git-metadata/
