@@ -27,6 +27,7 @@ data/memory/*.raw
 data/memory/*.dump
 data/android-emulator/downloads/
 data/android-emulator/sdk/
+data/android-emulator/toolchain/
 data/android-emulator/logs/
 !data/android-emulator/logs/.gitkeep
 data/aosp-lab/source/
