@@ -35,9 +35,13 @@ data/aosp-lab/out/
 data/aosp-lab/dist/
 data/aosp-lab/cache/
 data/aosp-lab/downloads/
+data/aosp-lab/custom-ramdisks/
+data/aosp-lab/ramdump-results/
 data/aosp-lab/logs/*.tmp
 data/aosp-lab/logs/*.pid
 !data/aosp-lab/logs/.gitkeep
+data/android-kernel/
+android-cuttlefish/
 
 # Archived nested git metadata
 archive/git-metadata/
