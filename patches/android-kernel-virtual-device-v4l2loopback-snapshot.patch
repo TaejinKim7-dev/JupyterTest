@@ -1,0 +1,130 @@
+diff --git a/v4l2loopback/v4l2loopback.c b/v4l2loopback/v4l2loopback.c
+index e5955ab..e59e6d1 100644
+--- a/v4l2loopback/v4l2loopback.c
++++ b/v4l2loopback/v4l2loopback.c
+@@ -24,6 +24,7 @@
+ #include <linux/fs.h>
+ #include <linux/capability.h>
+ #include <linux/eventpoll.h>
++#include <linux/string.h>
+ #include <media/v4l2-ioctl.h>
+ #include <media/v4l2-common.h>
+ #include <media/v4l2-device.h>
+@@ -353,6 +354,48 @@ struct v4l2_loopback_device {
+ 	spinlock_t lock, list_lock;
+ };
+ 
++#define RAMDUMP_TEST_MAGIC 0x52414d44U /* "RAMD" */
++#define RAMDUMP_TEST_VERSION 1
++#define RAMDUMP_TEST_MARKER "RAMDUMP_TEST"
++
++struct ramdump_test_snapshot {
++	u32 magic;
++	u32 version;
++	int video_nr;
++	struct v4l2_loopback_device *dev;
++	struct video_device *vdev;
++	struct task_struct *task;
++	pid_t pid;
++	char comm[TASK_COMM_LEN];
++	char trigger[16];
++	char marker[16];
++};
++
++static struct ramdump_test_snapshot ramdump_test_snapshot __used;
++
++static void ramdump_test_capture_snapshot(struct v4l2_loopback_device *dev,
++					  int video_nr, const char *trigger)
++{
++	volatile struct ramdump_test_snapshot *snapshot =
++		&ramdump_test_snapshot;
++
++	memset((void *)snapshot, 0, sizeof(*snapshot));
++	snapshot->magic = RAMDUMP_TEST_MAGIC;
++	snapshot->version = RAMDUMP_TEST_VERSION;
++	snapshot->video_nr = video_nr;
++	snapshot->dev = dev;
++	snapshot->vdev = dev ? dev->vdev : NULL;
++	snapshot->task = current;
++	snapshot->pid = task_pid_nr(current);
++	strscpy((char *)snapshot->comm, current->comm, sizeof(snapshot->comm));
++	strscpy((char *)snapshot->trigger, trigger, sizeof(snapshot->trigger));
++	strscpy((char *)snapshot->marker, RAMDUMP_TEST_MARKER,
++		sizeof(snapshot->marker));
++
++	/* Keep snapshot stores visible before the deliberate fault/panic. */
++	smp_wmb();
++}
++
+ /* types of opener shows what opener wants to do with loopback */
+ enum opener_type {
+ 	// clang-format off
+@@ -759,6 +802,52 @@ static ssize_t attr_show_state(struct device *cd, struct device_attribute *attr,
+ 
+ static DEVICE_ATTR(state, S_IRUGO, attr_show_state, NULL);
+ 
++static ssize_t attr_show_fault_trigger(struct device *cd,
++				       struct device_attribute *attr, char *buf)
++{
++	return sprintf(buf, "panic\noops\nwarn\n");
++}
++
++static ssize_t attr_store_fault_trigger(struct device *cd,
++					struct device_attribute *attr,
++					const char *buf, size_t len)
++{
++	struct v4l2_loopback_device *dev = v4l2loopback_cd2dev(cd);
++	int video_nr = dev && dev->vdev ? dev->vdev->num : -1;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
++	if (sysfs_streq(buf, "warn")) {
++		ramdump_test_capture_snapshot(dev, video_nr, "warn");
++		WARN(1, "v4l2loopback ramdump test: warn trigger on video%d\n",
++		     video_nr);
++		return len;
++	}
++
++	if (sysfs_streq(buf, "oops")) {
++		volatile unsigned int *null_ptr = NULL;
++
++		ramdump_test_capture_snapshot(dev, video_nr, "oops");
++		pr_emerg("v4l2loopback ramdump test: null deref trigger on video%d\n",
++			 video_nr);
++		*null_ptr = 0x4c4f4f50;
++		return len;
++	}
++
++	if (sysfs_streq(buf, "panic")) {
++		ramdump_test_capture_snapshot(dev, video_nr, "panic");
++		pr_emerg("v4l2loopback ramdump test: panic trigger on video%d\n",
++			 video_nr);
++		panic("v4l2loopback ramdump test: sysfs-triggered panic");
++	}
++
++	return -EINVAL;
++}
++
++static DEVICE_ATTR(fault_trigger, S_IRUGO | S_IWUSR, attr_show_fault_trigger,
++		   attr_store_fault_trigger);
++
+ static void v4l2loopback_remove_sysfs(struct video_device *vdev)
+ {
+ #define V4L2_SYSFS_DESTROY(x) device_remove_file(&vdev->dev, &dev_attr_##x)
+@@ -768,6 +857,7 @@ static void v4l2loopback_remove_sysfs(struct video_device *vdev)
+ 		V4L2_SYSFS_DESTROY(buffers);
+ 		V4L2_SYSFS_DESTROY(max_openers);
+ 		V4L2_SYSFS_DESTROY(state);
++		V4L2_SYSFS_DESTROY(fault_trigger);
+ 		/* ... */
+ 	}
+ }
+@@ -787,6 +877,7 @@ static void v4l2loopback_create_sysfs(struct video_device *vdev)
+ 		V4L2_SYSFS_CREATE(buffers);
+ 		V4L2_SYSFS_CREATE(max_openers);
+ 		V4L2_SYSFS_CREATE(state);
++		V4L2_SYSFS_CREATE(fault_trigger);
+ 		/* ... */
+ 	} while (0);
+ 
