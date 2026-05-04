@@ -1,0 +1,4 @@
+jupyter-ai>=3.0.0
+langchain-openai>=0.3.0
+jupyterlab>=4.0.0
+ipython>=8.0.0

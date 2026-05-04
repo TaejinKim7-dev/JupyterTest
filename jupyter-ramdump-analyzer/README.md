@@ -39,6 +39,14 @@ export OPENAI_API_KEY="sk-..."
 export OPENAI_API_BASE="https://api.openai.com/v1"  # optional
 ```
 
+Jupyter AI를 함께 쓰려면 별도 설치를 권장합니다.
+
+```bash
+pip install -r requirements-jupyter-ai.txt
+```
+
+OpenRouter를 Jupyter AI에서 직접 쓰려면 `OPENROUTER_API_KEY`를 추가로 설정합니다.
+
 ## Quick start
 
 기본 smoke test:
@@ -75,6 +83,11 @@ jupyter lab
 ```
 
 그 다음 [notebooks/pilot_test_notebook.ipynb](/home/taejin/Jupyter/jupyter-ramdump-analyzer/notebooks/pilot_test_notebook.ipynb)를 실행합니다.
+
+Jupyter AI 관련 문서:
+
+- [docs/jupyter_ai_openrouter_workflow.md](/home/taejin/Jupyter/jupyter-ramdump-analyzer/docs/jupyter_ai_openrouter_workflow.md)
+- [notebooks/jupyter_ai_openrouter_demo.ipynb](/home/taejin/Jupyter/jupyter-ramdump-analyzer/notebooks/jupyter_ai_openrouter_demo.ipynb)
 
 환경변수로 dump/vmlinux 경로를 넘겨 notebook에서 바로 사용하려면:
 
