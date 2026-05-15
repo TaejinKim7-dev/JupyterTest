@@ -29,30 +29,19 @@ jupyter-ramdump-analyzer/
 ## Requirements
 
 ```bash
-pip install jupyterlab requests ipython volatility3
+pip install -r requirements.txt
 ```
 
-환경 변수:
+OpenRouter API 키 발급: https://openrouter.ai/keys
+
+설정 파일 준비:
 
 ```bash
-export OPENAI_API_KEY="sk-..."
-export OPENAI_API_BASE="https://api.openai.com/v1"  # optional
+cp configs/jupyter_ai_openrouter.env.example configs/jupyter_ai_openrouter.env
+# OPENAI_API_KEY에 발급받은 OpenRouter 키 입력
 ```
 
-Jupyter AI를 함께 쓰려면 별도 설치를 권장합니다.
-
-```bash
-pip install -r requirements-jupyter-ai.txt
-```
-
-OpenRouter를 Jupyter AI에서 직접 쓰려면 `OPENROUTER_API_KEY`를 추가로 설정합니다.
-
-설정 파일 템플릿:
-
-- `configs/jupyter_ai_openrouter.env.example`
-- 로컬 실제 파일: `configs/jupyter_ai_openrouter.env`
-
-예시 파일을 복사한 뒤 키와 모델만 채우면 됩니다.
+`configs/jupyter_ai_openrouter.env.example`을 복사한 뒤 키만 채우면 됩니다.
 
 ## Quick start
 
@@ -117,14 +106,15 @@ DUMP_PATH=/path/to/memory.vmem VMLINUX_PATH=/path/to/vmlinux jupyter lab
 
 기본 LLM 설정:
 
-- model: `openai/gpt-oss-120b:free`
+- model: `nvidia/nemotron-3-super-120b-a12b:free`
 - base URL: `https://openrouter.ai/api/v1`
-- fallback model: `openrouter/free`
+- fallback model: `poolside/laguna-m.1:free`
 
 주의:
 
 - free 모델은 지연이 있을 수 있으므로 기본 흐름은 `LLM 분석 1회`로 두고, 추가 계획 생성은 선택적으로 켜는 것이 좋습니다.
-- 기본 free 모델 upstream 이 비어 있으면 `openrouter/free` 로 한 번 더 재시도합니다.
+- 기본 모델 upstream이 비어 있으면 `poolside/laguna-m.1:free`로 한 번 더 재시도합니다.
+- OpenRouter free tier 가용 모델은 수시로 변경되므로 응답 없을 경우 `configs/jupyter_ai_openrouter.env`에서 모델 교체 후 재시도합니다.
 
 ## Known limitations
 
