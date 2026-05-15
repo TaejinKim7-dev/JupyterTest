@@ -10,9 +10,9 @@ import requests
 class LLMAssistant:
     """Helper for OpenAI-compatible LLM APIs."""
 
-    DEFAULT_MODEL = "openai/gpt-oss-120b:free"
+    DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
     DEFAULT_API_BASE = "https://openrouter.ai/api/v1"
-    DEFAULT_FALLBACK_MODELS = ["openrouter/free"]
+    DEFAULT_FALLBACK_MODELS = ["poolside/laguna-m.1:free"]
 
     def __init__(
         self,

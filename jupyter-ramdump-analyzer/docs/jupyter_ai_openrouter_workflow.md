@@ -18,6 +18,23 @@ pip install -r requirements-jupyter-ai.txt
 
 추가로 `jupyter-ai`가 OpenRouter/OpenAI-compatible endpoint를 쓰려면 `langchain-openai`가 필요하다.
 
+## 설정 파일
+
+환경 변수 수동 설정 대신 설정 파일을 사용할 수 있다.
+
+```bash
+# 설정 파일 로딩 (bash)
+source configs/jupyter_ai_openrouter.env
+
+# 또는 Python에서
+from dotenv import load_dotenv
+load_dotenv("configs/jupyter_ai_openrouter.env")
+```
+
+설정 파일 목록:
+- `configs/jupyter_ai_openrouter.env` - API 키 및 모델 설정
+- `configs/jupyter_ai_openrouter.env.example` - 템플릿 (실제 키 제외)
+
 ## 환경 변수
 
 OpenRouter free model 기준:
@@ -26,8 +43,8 @@ OpenRouter free model 기준:
 export OPENROUTER_API_KEY="YOUR_OPENROUTER_KEY"
 export OPENAI_API_KEY="YOUR_OPENROUTER_KEY"
 export OPENAI_API_BASE="https://openrouter.ai/api/v1"
-export OPENAI_MODEL="openai/gpt-oss-120b:free"
-export OPENAI_FALLBACK_MODEL="openrouter/free"
+export OPENAI_MODEL="nvidia/nemotron-3-super-120b-a12b:free"
+export OPENAI_FALLBACK_MODEL="poolside/free"
 ```
 
 주의:
@@ -48,7 +65,7 @@ Notebook 셀에서 아래처럼 시작한다.
 그 다음 `%%ai` 셀을 사용한다.
 
 ```python
-%%ai openai-chat:openai/gpt-oss-120b:free
+%%ai openai-chat:nvidia/nemotron-3-super-120b-a12b:free
 이 vmcore 분석 요약을 5줄로 정리해줘.
 ```
 
@@ -64,11 +81,11 @@ chat UI는 JupyterLab 좌측 패널의 Chat 항목에서 연다.
 
 설정 흐름:
 
-1. `jupyter lab` 실행
+1. `jupyter lab` 실행 (또는 특정 노트북과 함께 실행 예: `jupyter lab notebooks/debug_chatbot.ipynb`)
 2. Chat 패널 열기
 3. `AI Settings`에서 `OpenRouter` provider 선택
 4. `OPENROUTER_API_KEY` 또는 환경변수 값 입력
-5. model id를 `openai/gpt-oss-120b:free`로 지정
+5. model id를 `nvidia/nemotron-3-super-120b-a12b:free`로 지정
 6. base URL을 `https://openrouter.ai/api/v1`로 지정
 
 이 방식은 다음에 유리하다.

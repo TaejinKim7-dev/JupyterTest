@@ -47,6 +47,13 @@ pip install -r requirements-jupyter-ai.txt
 
 OpenRouter를 Jupyter AI에서 직접 쓰려면 `OPENROUTER_API_KEY`를 추가로 설정합니다.
 
+설정 파일 템플릿:
+
+- `configs/jupyter_ai_openrouter.env.example`
+- 로컬 실제 파일: `configs/jupyter_ai_openrouter.env`
+
+예시 파일을 복사한 뒤 키와 모델만 채우면 됩니다.
+
 ## Quick start
 
 기본 smoke test:

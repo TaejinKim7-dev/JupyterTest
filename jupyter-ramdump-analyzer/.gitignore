@@ -12,6 +12,7 @@ __pycache__/
 *.pyc
 *.pyo
 .env
+jupyter_ai_openrouter.env
 venv/
 .venv/
 
