@@ -45,16 +45,18 @@ OpenRouter API 키 발급: https://openrouter.ai/keys
 ## Quick start
 
 ```bash
-source ~/jupyter-ai-env/bin/activate
-export OPENROUTER_API_KEY="sk-or-v1-..."
-jupyter lab
-```
+# API 키 설정 (최초 1회)
+cp configs/jupyter_ai_openrouter.env.example configs/jupyter_ai_openrouter.env
+# configs/jupyter_ai_openrouter.env 열어서 OPENROUTER_API_KEY 입력
 
-> API 키는 Jupyter **서버 프로세스** 환경에 있어야 합니다. jupyter lab 실행 전 같은 터미널에서 export 해야 합니다.
+# JupyterLab 시작 (venv 활성화 + 환경변수 설정 자동화)
+./scripts/start_jupyter.sh
+```
 
 메모리 덤프 분석 스크립트:
 
 ```bash
+source ~/jupyter-ai-env/bin/activate
 python src/memory_analyzer.py /path/to/memory.vmem
 python src/memory_kernel_analyzer.py /path/to/memory.vmem
 python src/run_llm_feasibility.py /path/to/memory.vmem
@@ -73,49 +75,52 @@ python src/test_llm_api.py
 
 ### 2. JupyterLab Chat UI 테스트 (Jupyternaut → OpenRouter)
 
-```bash
-source ~/jupyter-ai-env/bin/activate
-export OPENROUTER_API_KEY="sk-or-v1-..."
-jupyter lab
+```
+./scripts/start_jupyter.sh
 ```
 
 1. `File > New > Chat` 열기
-2. 채팅창에 입력:
-   ```
-   @Jupyternaut 어떤 모델로 응답하고 있는지 알려줘
-   ```
+2. 채팅창에 입력: `@Jupyternaut 어떤 모델로 응답하고 있는지 알려줘`
 3. 기대 응답: `openrouter/nvidia/nemotron-3-super-120b-a12b` 모델 언급
 
-> Chat UI 연결 구조: `JupyterLab Chat UI → Jupyternaut → LiteLLM → OpenRouter`
 > 자세한 설정 방법: [docs/jupyter_ai_jupyternaut_openrouter_summary.md](../docs/jupyter_ai_jupyternaut_openrouter_summary.md)
 
-### 3. 노트북 기반 로그 분석 테스트
-
-```bash
-jupyter lab
-```
-
-`notebooks/interactive_log_analyzer.ipynb` 열고 셀 순서대로 실행합니다.
-`/home/taejin/Jupyter/data/memory/` 경로의 vmem 파일이 분석 대상입니다.
-
-### 4. `%%ai` 매직 테스트 (노트북 셀)
+### 3. `%%ai` 매직 테스트 (노트북 셀)
 
 ```python
 %load_ext jupyter_ai_magics
-%%ai openai-chat:nvidia/nemotron-3-super-120b-a12b
+%%ai nemo           # alias (ipython_config.py에서 설정됨)
 간단한 파이썬 예제 만들어줘
 ```
 
-> `%%ai` 매직은 jupyter-ai-magics 2.x 형식(`openai-chat:`)을 사용합니다.
-> Chat UI의 Jupyternaut(`openrouter/`)와 모델 ID 형식이 다릅니다.
+`nemo` alias 없이 전체 ID: `%%ai openai-chat-custom:nvidia/nemotron-3-super-120b-a12b`
+
+> 자세한 사용법: [docs/jupyter_ai_magic_setup.md](docs/jupyter_ai_magic_setup.md)  
+> 전체 데모: [notebooks/jupyter_ai_magic_demo.ipynb](notebooks/jupyter_ai_magic_demo.ipynb)
+
+### 4. 노트북 기반 로그 분석 테스트
+
+`notebooks/interactive_log_analyzer.ipynb` 열고 셀 순서대로 실행합니다.  
+`/home/taejin/Jupyter/data/memory/` 경로의 vmem 파일이 분석 대상입니다.  
+Step 3에서 `%%ai nemo` 셀과 `LLMAssistant` 셀 두 방식을 선택해 사용할 수 있습니다.
+
+### LLM 호출 경로 비교
+
+| 항목 | Chat UI (`@Jupyternaut`) | `%%ai` 매직 |
+|------|--------------------------|-------------|
+| 모델 ID 형식 | `openrouter/<model>` | `openai-chat-custom:<model>` 또는 alias |
+| 환경변수 | `OPENROUTER_API_KEY` | `OPENAI_API_KEY` + `OPENAI_API_BASE` |
+| 출력 위치 | Chat 사이드패널 | 노트북 셀 출력 |
+| 변수 주입 | `@file:`, `@active-cell` | `{python_var}` |
 
 ### 트러블슈팅
 
 | 증상 | 원인 | 해결 |
 |------|------|------|
-| `LLM Provider NOT provided` | 모델 ID 형식 오류 | `~/.local/share/jupyter/jupyter_ai/config.json`에서 `model_provider_id`를 `openrouter/<model>` 형식으로 수정 |
-| `401 / 403` | API 키 미설정 | jupyter lab 실행 전 `export OPENROUTER_API_KEY=...` |
-| `pip check` 경고 | langchain 버전 충돌 | 동작에 지장 없음 (확인됨). 필요 시 `jupyter-ai-magics` 제거로 해결 |
+| `LLM Provider NOT provided` (매직) | `openai-chat:` 사용 | `openai-chat-custom:`으로 변경 |
+| `LLM Provider NOT provided` (Chat UI) | config.json 구버전 형식 | `~/.local/share/jupyter/jupyter_ai/config.json`에서 `openrouter/<model>` 형식으로 수정 |
+| `401 / 403` | API 키 미설정 | `./scripts/start_jupyter.sh`로 재시작 |
+| `pip check` 경고 | langchain 버전 충돌 | 동작에 지장 없음 (확인됨 2026-05-16) |
 | Jupyternaut가 목록에 없음 | 미설치 | `pip install "jupyter-ai[jupyternaut]==3.0.0" litellm` 후 JupyterLab 재시작 |
 
 ## Sample data source
