@@ -3,10 +3,10 @@ jupyterlab>=4.0.0
 ipython>=8.0.0
 ipywidgets>=8.0.0
 
-# jupyter-ai 3.x (Chat UI + %%ai magic, OpenRouter/Ollama/vLLM 직접 연결)
+# jupyter-ai 3.x (Chat UI, OpenRouter 연결)
 # 전체 설치는 requirements-jupyter-ai.txt 참조
-jupyter-ai
-jupyter-ai-magics
+jupyter-ai[jupyternaut]
+litellm
 langchain-openai>=0.3.0
 
 # 유틸
