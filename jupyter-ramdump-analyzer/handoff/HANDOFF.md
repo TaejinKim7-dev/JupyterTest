@@ -1,6 +1,6 @@
 # HANDOFF.md
 
-업데이트: 2026-05-16
+업데이트: 2026-05-16 (2차)
 
 ---
 
@@ -18,6 +18,7 @@ JupyterLab + OpenRouter(LLM) 으로 Android/Linux 커널 ramdump를 분석하는
 | `src/llm_assistant.py` | OpenRouter 직접 호출 클라이언트 (requests 기반) |
 | `src/memory_kernel_analyzer.py` | vmem 분석 → `build_analysis_context()`, `summarize_findings()` |
 | `notebooks/interactive_log_analyzer.ipynb` | 메인 분석 노트북. %%ai 매직 + ipywidgets 채팅 UI |
+| `notebooks/dump_debug_examples.ipynb` | 덤프 기반 디버깅 예시 10개 (%%ai 5 + Chat UI 5). memory.vmem 로드 없이 실행 가능 |
 | `notebooks/jupyter_ai_magic_demo.ipynb` | %%ai 매직 사용법 데모 |
 | `scripts/start_jupyter.sh` | venv 활성화 + env 파일 로드 + jupyter lab 실행 |
 | `configs/jupyter_ai_openrouter.env` | API 키 (gitignore, .example만 커밋됨) |
@@ -52,27 +53,35 @@ JupyterLab + OpenRouter(LLM) 으로 Android/Linux 커널 ramdump를 분석하는
 
 ## 4. 현재 상태
 
-**완료된 것 (2026-05-16)**
+**완료된 것 (2026-05-16 1차)**
 - Chat UI (`@Jupyternaut`) → OpenRouter 응답 확인
 - `%%ai` 매직 → `{context_summary}` 보간 포함 응답 확인
 - `interactive_log_analyzer.ipynb` 전체 실행 (Step 1~4) 확인
-- README에 초기 설정 재현 절차(4단계) + 덤프 기반 디버깅 예시 5개 추가
-- GitHub `TaejinKim7-dev/JupyterTest` main 브랜치 반영 완료 (`aca9d0d`)
+- README에 초기 설정 재현 절차(4단계) + 덤프 기반 디버깅 예시 추가
+- GitHub `TaejinKim7-dev/JupyterTest` main 반영 (`aca9d0d`)
+
+**완료된 것 (2026-05-16 2차)**
+- `notebooks/dump_debug_examples.ipynb` 신규 생성 및 사용자 테스트 완료
+  - %%ai 5개 셀 (alloc magic+oops / OOM↔grub / 네트워크 / 계정 / 종합 triage) — `{변수}` 보간 포함
+  - Chat UI 질문 5개 markdown 셀 (bash 도구 / @file 첨부 / Telnet-FTP / woreilly 계정 / OOM 가설)
+  - memory.vmem 로드 없이 하드코딩 변수로 즉시 실행 가능
+- README 덤프 예시 5개 → 10개로 교체 (%%ai 5 + @Jupyternaut 5)
+- GitHub main 반영 (`ae6e403`)
 
 **바로 다음 할 일**
 - `jupyter_ai_magic_demo.ipynb` 실제 실행 테스트 (작성만 됨, 미실행)
-- Chat UI `@file:` 첨부 기능 실제 동작 확인
-- Jupyternaut의 notebook toolkit(read_notebook_cells, run_cell 등) 실제 활용 테스트
+- Jupyternaut bash 도구로 vmem 직접 분석 명령 실행 테스트 (보안 주의)
+- `src/llm_assistant.py`의 `OPENAI_API_KEY` 의존을 `OPENROUTER_API_KEY`로 통일
 
 ---
 
 ## 5. TODO (우선순위 순)
 
-1. `jupyter_ai_magic_demo.ipynb` 전체 셀 실행 검증
-2. Chat UI에서 `@Jupyternaut @file:notebooks/interactive_log_analyzer.ipynb` 동작 확인
-3. Jupyternaut bash 도구로 vmem 직접 분석 명령 실행 테스트 (보안 주의)
+1. `jupyter_ai_magic_demo.ipynb` 전체 셀 실행 검증 (미실행)
+2. Jupyternaut bash 도구로 vmem 직접 분석 명령 실행 테스트 (보안 주의)
+3. `src/llm_assistant.py`의 `OPENAI_API_KEY` 의존을 `OPENROUTER_API_KEY`로 통일
 4. 다른 무료 OpenRouter 모델 가용성 재확인 (deepseek, gemma 등 간헐적 404)
-5. `src/llm_assistant.py`의 `OPENAI_API_KEY` 의존을 `OPENROUTER_API_KEY`로 통일
+5. Chat UI `@file:` 첨부 기능 심층 활용 (노트북 분석 결과 자동 요약)
 
 ---
 
