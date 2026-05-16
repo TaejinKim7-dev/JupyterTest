@@ -1,4 +1,27 @@
-jupyter-ai>=3.0.0
-langchain-openai>=0.3.0
+# JupyterLab 핵심
 jupyterlab>=4.0.0
 ipython>=8.0.0
+ipywidgets>=8.0.0
+
+# jupyter-ai 3.x + Jupyternaut (Chat UI → LiteLLM → OpenRouter 경로)
+jupyter-ai[jupyternaut]==3.0.0
+jupyter-ai-magics
+
+# LiteLLM (Jupyternaut가 OpenRouter 등 다양한 provider 연결에 사용)
+litellm
+
+# LangChain (%%ai 매직용)
+# 주의: jupyter-ai[jupyternaut]이 langgraph를 통해 langchain 1.x를 설치함
+# → langchain-openai 0.3.x(langchain-core<1.0.0 요구)와 pip check 경고 발생
+# → 실제 Chat UI(Jupyternaut) 동작에는 지장 없음 (확인됨 2026-05-16)
+langchain-openai>=0.3.0
+langchain>=0.3.0
+
+# 실시간 협업 (없으면 globalAwareness 404 경고 발생)
+jupyter-collaboration
+# 파일 ID 서비스 (없으면 notebook File ID error 발생)
+jupyter-server-fileid
+
+# 유틸
+python-dotenv>=1.0.0
+requests>=2.31.0
