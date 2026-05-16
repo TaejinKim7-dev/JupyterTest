@@ -29,67 +29,94 @@ jupyter-ramdump-analyzer/
 ## Requirements
 
 ```bash
+# venv 생성 및 활성화 (최초 1회)
+python -m venv ~/jupyter-ai-env
+source ~/jupyter-ai-env/bin/activate
+
+# 의존성 설치 (전체: Jupyter AI + Jupyternaut + LiteLLM 포함)
+pip install -r requirements-jupyter-ai.txt
+
+# 또는 기본 패키지만
 pip install -r requirements.txt
 ```
 
 OpenRouter API 키 발급: https://openrouter.ai/keys
 
-설정 파일 준비:
-
-```bash
-cp configs/jupyter_ai_openrouter.env.example configs/jupyter_ai_openrouter.env
-# OPENAI_API_KEY에 발급받은 OpenRouter 키 입력
-```
-
-`configs/jupyter_ai_openrouter.env.example`을 복사한 뒤 키만 채우면 됩니다.
-
 ## Quick start
 
-기본 smoke test:
+```bash
+source ~/jupyter-ai-env/bin/activate
+export OPENROUTER_API_KEY="sk-or-v1-..."
+jupyter lab
+```
+
+> API 키는 Jupyter **서버 프로세스** 환경에 있어야 합니다. jupyter lab 실행 전 같은 터미널에서 export 해야 합니다.
+
+메모리 덤프 분석 스크립트:
 
 ```bash
 python src/memory_analyzer.py /path/to/memory.vmem
 python src/memory_kernel_analyzer.py /path/to/memory.vmem
 python src/run_llm_feasibility.py /path/to/memory.vmem
-python -m unittest discover -s tests
 ```
 
-인자를 생략하면 실행 중에 `dump_path` 를 직접 입력받습니다.
+## Testing
 
-예:
+### 1. LLM API 연결 테스트
 
 ```bash
-python src/memory_analyzer.py
-python src/memory_kernel_analyzer.py
-python src/run_llm_feasibility.py
+source ~/jupyter-ai-env/bin/activate
+python src/test_llm_api.py
 ```
 
-임의 파일 테스트:
+정상 응답이 오면 OpenRouter 연결 확인 완료입니다.
+
+### 2. JupyterLab Chat UI 테스트 (Jupyternaut → OpenRouter)
 
 ```bash
-python src/memory_analyzer.py /path/to/memory.vmem --vmlinux /path/to/vmlinux
-python src/memory_kernel_analyzer.py /path/to/memory.vmem --vmlinux /path/to/vmlinux
-python src/run_llm_feasibility.py /path/to/memory.vmem --vmlinux /path/to/vmlinux
+source ~/jupyter-ai-env/bin/activate
+export OPENROUTER_API_KEY="sk-or-v1-..."
+jupyter lab
 ```
 
-Jupyter demo:
+1. `File > New > Chat` 열기
+2. 채팅창에 입력:
+   ```
+   @Jupyternaut 어떤 모델로 응답하고 있는지 알려줘
+   ```
+3. 기대 응답: `openrouter/nvidia/nemotron-3-super-120b-a12b` 모델 언급
+
+> Chat UI 연결 구조: `JupyterLab Chat UI → Jupyternaut → LiteLLM → OpenRouter`
+> 자세한 설정 방법: [docs/jupyter_ai_jupyternaut_openrouter_summary.md](../docs/jupyter_ai_jupyternaut_openrouter_summary.md)
+
+### 3. 노트북 기반 로그 분석 테스트
 
 ```bash
 jupyter lab
 ```
 
-그 다음 [notebooks/pilot_test_notebook.ipynb](/home/taejin/Jupyter/jupyter-ramdump-analyzer/notebooks/pilot_test_notebook.ipynb)를 실행합니다.
+`notebooks/interactive_log_analyzer.ipynb` 열고 셀 순서대로 실행합니다.
+`/home/taejin/Jupyter/data/memory/` 경로의 vmem 파일이 분석 대상입니다.
 
-Jupyter AI 관련 문서:
+### 4. `%%ai` 매직 테스트 (노트북 셀)
 
-- [docs/jupyter_ai_openrouter_workflow.md](/home/taejin/Jupyter/jupyter-ramdump-analyzer/docs/jupyter_ai_openrouter_workflow.md)
-- [notebooks/jupyter_ai_openrouter_demo.ipynb](/home/taejin/Jupyter/jupyter-ramdump-analyzer/notebooks/jupyter_ai_openrouter_demo.ipynb)
-
-환경변수로 dump/vmlinux 경로를 넘겨 notebook에서 바로 사용하려면:
-
-```bash
-DUMP_PATH=/path/to/memory.vmem VMLINUX_PATH=/path/to/vmlinux jupyter lab
+```python
+%load_ext jupyter_ai_magics
+%%ai openai-chat:nvidia/nemotron-3-super-120b-a12b
+간단한 파이썬 예제 만들어줘
 ```
+
+> `%%ai` 매직은 jupyter-ai-magics 2.x 형식(`openai-chat:`)을 사용합니다.
+> Chat UI의 Jupyternaut(`openrouter/`)와 모델 ID 형식이 다릅니다.
+
+### 트러블슈팅
+
+| 증상 | 원인 | 해결 |
+|------|------|------|
+| `LLM Provider NOT provided` | 모델 ID 형식 오류 | `~/.local/share/jupyter/jupyter_ai/config.json`에서 `model_provider_id`를 `openrouter/<model>` 형식으로 수정 |
+| `401 / 403` | API 키 미설정 | jupyter lab 실행 전 `export OPENROUTER_API_KEY=...` |
+| `pip check` 경고 | langchain 버전 충돌 | 동작에 지장 없음 (확인됨). 필요 시 `jupyter-ai-magics` 제거로 해결 |
+| Jupyternaut가 목록에 없음 | 미설치 | `pip install "jupyter-ai[jupyternaut]==3.0.0" litellm` 후 JupyterLab 재시작 |
 
 ## Sample data source
 
