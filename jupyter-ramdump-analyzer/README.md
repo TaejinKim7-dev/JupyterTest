@@ -26,29 +26,75 @@ jupyter-ramdump-analyzer/
 └── tests/
 ```
 
-## Requirements
+## 초기 설정 (클론 후 최초 1회)
+
+GitHub에서 클론한 직후 아래 4단계를 순서대로 완료해야 테스트가 재현됩니다.
+
+### Step 1. venv 생성 및 패키지 설치
 
 ```bash
-# venv 생성 및 활성화 (최초 1회)
 python -m venv ~/jupyter-ai-env
 source ~/jupyter-ai-env/bin/activate
-
-# 의존성 설치 (전체: Jupyter AI + Jupyternaut + LiteLLM 포함)
 pip install -r requirements-jupyter-ai.txt
-
-# 또는 기본 패키지만
-pip install -r requirements.txt
 ```
 
 OpenRouter API 키 발급: https://openrouter.ai/keys
 
+### Step 2. API 키 설정
+
+```bash
+cp configs/jupyter_ai_openrouter.env.example configs/jupyter_ai_openrouter.env
+```
+
+`configs/jupyter_ai_openrouter.env`를 열어 `OPENROUTER_API_KEY`에 발급받은 키를 입력합니다.
+
+### Step 3. Jupyter 서버 설정 (`~/.jupyter/jupyter_server_config.py`)
+
+아래 내용으로 파일을 생성합니다 (API 키는 Step 2의 키로 교체):
+
+```python
+import os
+
+c.AiExtension.initial_language_model = "openrouter/nvidia/nemotron-3-super-120b-a12b"
+
+_key = "여기에_OPENROUTER_API_KEY_입력"
+os.environ.setdefault("OPENROUTER_API_KEY", _key)
+os.environ.setdefault("OPENAI_API_KEY", _key)
+os.environ.setdefault("OPENAI_API_BASE", "https://openrouter.ai/api/v1")
+
+c.ServerApp.open_browser = False
+c.ServerApp.root_dir = '/home/taejin/Jupyter/jupyter-ramdump-analyzer'
+c.ServerApp.default_url = '/lab/tree/notebooks'
+```
+
+### Step 4. Jupyternaut 모델 설정 (`~/.local/share/jupyter/jupyter_ai/config.json`)
+
+```bash
+mkdir -p ~/.local/share/jupyter/jupyter_ai
+```
+
+아래 내용으로 파일을 생성합니다:
+
+```json
+{
+    "model_provider_id": "openrouter/nvidia/nemotron-3-super-120b-a12b",
+    "embeddings_provider_id": null,
+    "completions_model_provider_id": null,
+    "api_keys": {},
+    "send_with_shift_enter": false,
+    "fields": {},
+    "embeddings_fields": {},
+    "completions_fields": {}
+}
+```
+
+> **이 파일이 없으면** Chat UI(`@Jupyternaut`)가 구버전 모델 형식을 사용해 `LLM Provider NOT provided` 오류가 발생합니다.
+
+---
+
 ## Quick start
 
 ```bash
-# API 키 설정 (최초 1회)
-cp configs/jupyter_ai_openrouter.env.example configs/jupyter_ai_openrouter.env
-# configs/jupyter_ai_openrouter.env 열어서 OPENROUTER_API_KEY 입력
-
 # JupyterLab 시작 (venv 활성화 + 환경변수 설정 자동화)
 ./scripts/start_jupyter.sh
 ```
